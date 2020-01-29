@@ -22,17 +22,18 @@ class FirestoreHelper {
         return get(dataRef)
     }
 
-    suspend fun getDocument(path: String, document: String): FirestoreResult<DocumentSnapshot> = suspendCoroutine { continuation ->
-        val dataRef = FirebaseFirestore.getInstance().collection(path).document(document)
-        dataRef.get().addOnSuccessListener {documentSnapshot ->
+    suspend fun getDocument(path: String, documentPath: String): FirestoreResult<DocumentSnapshot> = suspendCoroutine { continuation ->
+        val source = Source.CACHE
+        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentPath)
+        dataRef.get(source).addOnSuccessListener { documentSnapshot ->
             continuation.resume(FirestoreResult.success(documentSnapshot))
         }.addOnFailureListener {
             continuation.resume(FirestoreResult.failed(it.message ?: return@addOnFailureListener))
         }
     }
 
-    suspend fun updateField(path: String, document: String, field: String, value: Any): FirestoreResult<Unit> = suspendCoroutine { continuation ->
-        val dataRef = FirebaseFirestore.getInstance().collection(path).document(document)
+    suspend fun updateField(path: String, documentPath: String, field: String, value: Any): FirestoreResult<Unit> = suspendCoroutine { continuation ->
+        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentPath)
         dataRef.update(field, value).addOnSuccessListener {
             continuation.resume(FirestoreResult.success(Unit))
         }.addOnFailureListener {
@@ -40,8 +41,8 @@ class FirestoreHelper {
         }
     }
 
-    suspend fun delete(path: String, document: String): FirestoreResult<Unit> = suspendCoroutine { continuation ->
-        val dataRef = FirebaseFirestore.getInstance().collection(path).document(document)
+    suspend fun delete(path: String, documentPath: String): FirestoreResult<Unit> = suspendCoroutine { continuation ->
+        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentPath)
         dataRef.delete().addOnSuccessListener {
             continuation.resume(FirestoreResult.success(Unit))
         }.addOnFailureListener {
@@ -49,17 +50,17 @@ class FirestoreHelper {
         }
     }
 
-    suspend fun push(path: String, value: Any): FirestoreResult<Unit> = suspendCoroutine { continuation ->
+    suspend fun push(path: String, value: Any): FirestoreResult<String> = suspendCoroutine { continuation ->
         val dataRef = FirebaseFirestore.getInstance().collection(path)
         dataRef.add(value).addOnSuccessListener {
-            continuation.resume(FirestoreResult.success(Unit))
+            continuation.resume(FirestoreResult.success(dataRef.id))
         }.addOnFailureListener {
             continuation.resume(FirestoreResult.failed(it.message ?: return@addOnFailureListener))
         }
     }
 
-    suspend fun post(path: String, documentId: String, value: Any): FirestoreResult<Unit> = suspendCoroutine { continuation ->
-        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentId)
+    suspend fun post(path: String, documentPath: String, value: Any): FirestoreResult<Unit> = suspendCoroutine { continuation ->
+        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentPath)
         dataRef.set(value).addOnSuccessListener {
             continuation.resume(FirestoreResult.success(Unit))
         }.addOnFailureListener {
@@ -67,8 +68,8 @@ class FirestoreHelper {
         }
     }
 
-    suspend fun updateFields(path: String, document: String, updates: HashMap<String, Any?>): FirestoreResult<Unit> = suspendCoroutine { continuation ->
-        val dataRef = FirebaseFirestore.getInstance().collection(path).document(document)
+    suspend fun updateFields(path: String, documentPath: String, updates: HashMap<String, Any?>): FirestoreResult<Unit> = suspendCoroutine { continuation ->
+        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentPath)
         dataRef.update(updates).addOnSuccessListener {
             continuation.resume(FirestoreResult.success(Unit))
         }.addOnFailureListener {
@@ -76,19 +77,54 @@ class FirestoreHelper {
         }
     }
 
-    fun stream(query: Query): LiveData<FirestoreResult<QuerySnapshot>> {
-        return FirestoreQueryLiveData(query)
+    fun fetchCollection(path: String? = null, query: Query? = null): LiveData<FirestoreResult<QuerySnapshot>> {
+        return FirestoreCollectionLiveData(path, query)
+    }
 
+    fun fetchDocument(path: String, documentPath: String): LiveData<FirestoreResult<DocumentSnapshot>> {
+        val ref = FirebaseFirestore.getInstance().collection(path).document(documentPath)
+        return FirestoreDocumentLiveData(ref)
     }
 }
 
-class FirestoreQueryLiveData(private val query: Query) : LiveData<FirestoreResult<QuerySnapshot>>() {
+class FirestoreDocumentLiveData(private val ref: DocumentReference) : LiveData<FirestoreResult<DocumentSnapshot>>() {
 
     private val listener = FirestoreEventListener()
     private var listenerRegistration: ListenerRegistration? = null
 
     override fun onActive() {
-        listenerRegistration = query.addSnapshotListener(listener)
+        listenerRegistration = ref.addSnapshotListener(listener)
+        super.onActive()
+    }
+
+    override fun onInactive() {
+        listenerRegistration?.remove()
+        super.onInactive()
+    }
+
+    inner class FirestoreEventListener : EventListener<DocumentSnapshot> {
+        override fun onEvent(p0: DocumentSnapshot?, p1: FirebaseFirestoreException?) {
+            value = FirestoreResult.success(p0)
+        }
+    }
+}
+
+class FirestoreCollectionLiveData(private val path: String? = null,
+                                  private val query: Query? = null) : LiveData<FirestoreResult<QuerySnapshot>>() {
+
+    private val ref: Query
+        get() {
+            return if (path != null) {
+                FirebaseFirestore.getInstance().collection(path)
+            } else {
+                query!!
+            }
+        }
+    private val listener = FirestoreEventListener()
+    private var listenerRegistration: ListenerRegistration? = null
+
+    override fun onActive() {
+        listenerRegistration = ref.addSnapshotListener(listener)
         super.onActive()
     }
 
