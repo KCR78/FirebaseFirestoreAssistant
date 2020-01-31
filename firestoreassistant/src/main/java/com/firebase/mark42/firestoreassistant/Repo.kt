@@ -6,8 +6,8 @@ import com.google.firebase.firestore.Query
 import java.util.HashMap
 
 internal interface Repo<T> {
-    suspend fun getFromFirestoreCache(path: String): T?
-    fun getFromFirestore(path: String): LiveData<T?>
+    suspend fun getCollectionFromFirestoreCache(path: String): T?
+    fun getCollectionFromFirestore(path: String): LiveData<T?>
     suspend fun getDocumentFromFirestoreCache(path: String, documentPath: String) : T?
     fun getDocumentFromFirestore(path: String, documentPath: String) : LiveData<T?>
     suspend fun pushToFirestore(path: String, t: Any): String?

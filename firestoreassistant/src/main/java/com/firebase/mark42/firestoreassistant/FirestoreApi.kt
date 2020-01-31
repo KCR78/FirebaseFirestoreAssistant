@@ -8,7 +8,7 @@ import java.util.HashMap
 
 class FirestoreApi {
 
-    suspend fun getFromFirestoreCache(path: String): FirestoreResult<QuerySnapshot> {
+    suspend fun getCollectionFromFirestoreCache(path: String): FirestoreResult<QuerySnapshot> {
         val firestoreResult = FirestoreHelper().get(path)
 
         if (firestoreResult.value == null || !firestoreResult.isSuccess()) {
@@ -18,7 +18,7 @@ class FirestoreApi {
         return firestoreResult
     }
 
-    fun getFromFirestore(path: String): LiveData<FirestoreResult<QuerySnapshot>> {
+    fun getCollectionFromFirestore(path: String): LiveData<FirestoreResult<QuerySnapshot>> {
         return FirestoreHelper().fetchCollection(path)
     }
 
