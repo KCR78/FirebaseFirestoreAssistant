@@ -8,8 +8,8 @@ import java.util.HashMap
 
 class FirestoreApi {
 
-    suspend fun getCollectionFromFirestoreCache(path: String): FirestoreResult<QuerySnapshot> {
-        val firestoreResult = FirestoreHelper().get(path)
+    suspend fun getCollectionFromFirestoreCache(collectionPath: String): FirestoreResult<QuerySnapshot> {
+        val firestoreResult = FirestoreHelper().get(collectionPath)
 
         if (firestoreResult.value == null || !firestoreResult.isSuccess()) {
             return FirestoreResult.failed(FirestoreResult.Error.FIRESTORE_REQUEST_FAILED.toString())
@@ -18,44 +18,52 @@ class FirestoreApi {
         return firestoreResult
     }
 
-    fun getCollectionFromFirestore(path: String): LiveData<FirestoreResult<QuerySnapshot>> {
-        return FirestoreHelper().fetchCollection(path)
+    fun getCollectionFromFirestore(collectionPath: String): LiveData<FirestoreResult<QuerySnapshot>> {
+        return FirestoreHelper().fetchCollection(collectionPath)
     }
 
-    suspend fun getDocumentFromFirestoreCache(path: String, documentPath: String) :
+    suspend fun getDocumentFromFirestoreCache(collectionPath: String, documentPath: String) :
             FirestoreResult<DocumentSnapshot> {
-        return FirestoreHelper().getDocument(path, documentPath)
+        return FirestoreHelper().getDocument(collectionPath, documentPath)
     }
 
-    fun getDocumentFromFirestore(path: String, documentPath: String) :
+    fun getDocumentFromFirestore(collectionPath: String, documentPath: String) :
             LiveData<FirestoreResult<DocumentSnapshot>> {
-        return FirestoreHelper().fetchDocument(path, documentPath)
+        return FirestoreHelper().fetchDocument(collectionPath, documentPath)
     }
 
-    suspend fun pushToFirestore(path: String, t: Any): String? {
-        val key = FirestoreHelper().push(path, t)
+    suspend fun pushToFirestore(collectionPath: String, t: Any): String? {
+        val key = FirestoreHelper().push(collectionPath, t)
         return key.value
     }
 
+    suspend fun postDocumentToFirestore(
+        collectionPath: String,
+        documentPath: String,
+        updates: Any
+    ): FirestoreResult<Unit> {
+        return FirestoreHelper().post(collectionPath, documentPath, updates)
+    }
+
     suspend fun updateChildToFirestore(
-        path: String,
+        collectionPath: String,
         documentPath: String,
         field: String,
         value: Any
     ): FirestoreResult<Unit> {
-        return FirestoreHelper().updateField(path, documentPath, field, value)
+        return FirestoreHelper().updateField(collectionPath, documentPath, field, value)
     }
 
     suspend fun updateChildrenToFirestore(
-        path: String,
+        collectionPath: String,
         documentPath: String,
         updates: HashMap<String, Any?>
     ): FirestoreResult<Unit> {
-        return FirestoreHelper().updateFields(path, documentPath, updates)
+        return FirestoreHelper().updateFields(collectionPath, documentPath, updates)
     }
 
-    suspend fun deleteFromFirestore(path: String, documentPath: String): FirestoreResult<Unit> {
-        return FirestoreHelper().delete(path, documentPath)
+    suspend fun deleteFromFirestore(collectionPath: String, documentPath: String): FirestoreResult<Unit> {
+        return FirestoreHelper().delete(collectionPath, documentPath)
     }
 
     suspend fun getQueryFromFirestoreCache(query: Query): FirestoreResult<QuerySnapshot> {

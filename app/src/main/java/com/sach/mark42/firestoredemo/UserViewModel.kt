@@ -45,6 +45,19 @@ class UserViewModel: ViewModel() {
         }
     }
 
+    fun updateUserToFirestore(user: User) {
+        viewModelScope.launch {
+            val result = userRepo.updateDocumentToFirestore(
+                UserRepo.collectionPath(),"", user)
+            if (result.isSuccess()) {
+                //Display success message
+            } else {
+                //Display error message
+                result.errorMessage
+            }
+        }
+    }
+
     fun updateUserFieldToFirestore() {
         viewModelScope.launch {
             val result = userRepo.updateChildToFirestore(UserRepo.collectionPath(),
@@ -58,7 +71,7 @@ class UserViewModel: ViewModel() {
         }
     }
 
-    fun updateUserToFirestore(updates: HashMap<String, Any?>) {
+    fun updateUserFieldsToFirestore(updates: HashMap<String, Any?>) {
         viewModelScope.launch {
             //if path is null then it'll create a new node
             val result = userRepo.updateChildrenToFirestore(UserRepo.collectionPath(),

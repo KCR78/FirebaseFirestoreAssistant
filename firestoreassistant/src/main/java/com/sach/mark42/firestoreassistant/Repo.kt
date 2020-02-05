@@ -10,6 +10,8 @@ internal interface Repo<T> {
     suspend fun getDocumentFromFirestoreCache(collectionPath: String, documentPath: String) : T?
     fun getDocumentFromFirestore(collectionPath: String, documentPath: String) : LiveData<T?>
     suspend fun pushToFirestore(collectionPath: String, t: Any): String?
+    suspend fun updateDocumentToFirestore(collectionPath: String, documentPath: String, value: Any)
+            : FirestoreResult<Unit>
     suspend fun updateChildToFirestore(collectionPath: String, documentPath: String,
                                        field: String, value: Any): FirestoreResult<Unit>
     suspend fun updateChildrenToFirestore(collectionPath: String, documentPath: String,

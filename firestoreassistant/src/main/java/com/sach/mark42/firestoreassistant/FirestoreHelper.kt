@@ -17,14 +17,14 @@ class FirestoreHelper {
         }
     }
 
-    suspend fun get(path: String): FirestoreResult<QuerySnapshot> {
-        val dataRef = FirebaseFirestore.getInstance().collection(path)
+    suspend fun get(collectionPath: String): FirestoreResult<QuerySnapshot> {
+        val dataRef = FirebaseFirestore.getInstance().collection(collectionPath)
         return get(dataRef)
     }
 
-    suspend fun getDocument(path: String, documentPath: String): FirestoreResult<DocumentSnapshot> = suspendCoroutine { continuation ->
+    suspend fun getDocument(collectionPath: String, documentPath: String): FirestoreResult<DocumentSnapshot> = suspendCoroutine { continuation ->
         val source = Source.CACHE
-        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentPath)
+        val dataRef = FirebaseFirestore.getInstance().collection(collectionPath).document(documentPath)
         dataRef.get(source).addOnSuccessListener { documentSnapshot ->
             continuation.resume(FirestoreResult.success(documentSnapshot))
         }.addOnFailureListener {
@@ -50,8 +50,8 @@ class FirestoreHelper {
         }
     }
 
-    suspend fun push(path: String, value: Any): FirestoreResult<String> = suspendCoroutine { continuation ->
-        val dataRef = FirebaseFirestore.getInstance().collection(path)
+    suspend fun push(collectionPath: String, value: Any): FirestoreResult<String> = suspendCoroutine { continuation ->
+        val dataRef = FirebaseFirestore.getInstance().collection(collectionPath)
         dataRef.add(value).addOnSuccessListener {
             continuation.resume(FirestoreResult.success(dataRef.id))
         }.addOnFailureListener {
@@ -59,8 +59,9 @@ class FirestoreHelper {
         }
     }
 
-    suspend fun post(path: String, documentPath: String, value: Any): FirestoreResult<Unit> = suspendCoroutine { continuation ->
-        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentPath)
+    suspend fun post(collectionPath: String, documentPath: String, value: Any): FirestoreResult<Unit> = suspendCoroutine { continuation ->
+        val dataRef = FirebaseFirestore.getInstance().collection(collectionPath)
+            .document(documentPath)
         dataRef.set(value).addOnSuccessListener {
             continuation.resume(FirestoreResult.success(Unit))
         }.addOnFailureListener {
@@ -68,8 +69,9 @@ class FirestoreHelper {
         }
     }
 
-    suspend fun updateFields(path: String, documentPath: String, updates: HashMap<String, Any?>): FirestoreResult<Unit> = suspendCoroutine { continuation ->
-        val dataRef = FirebaseFirestore.getInstance().collection(path).document(documentPath)
+    suspend fun updateFields(collectionPath: String, documentPath: String, updates: HashMap<String, Any?>): FirestoreResult<Unit> = suspendCoroutine { continuation ->
+        val dataRef = FirebaseFirestore.getInstance().collection(collectionPath)
+            .document(documentPath)
         dataRef.update(updates).addOnSuccessListener {
             continuation.resume(FirestoreResult.success(Unit))
         }.addOnFailureListener {
@@ -77,12 +79,12 @@ class FirestoreHelper {
         }
     }
 
-    fun fetchCollection(path: String? = null, query: Query? = null): LiveData<FirestoreResult<QuerySnapshot>> {
-        return FirestoreCollectionLiveData(path, query)
+    fun fetchCollection(collectionPath: String? = null, query: Query? = null): LiveData<FirestoreResult<QuerySnapshot>> {
+        return FirestoreCollectionLiveData(collectionPath, query)
     }
 
-    fun fetchDocument(path: String, documentPath: String): LiveData<FirestoreResult<DocumentSnapshot>> {
-        val ref = FirebaseFirestore.getInstance().collection(path).document(documentPath)
+    fun fetchDocument(collectionPath: String, documentPath: String): LiveData<FirestoreResult<DocumentSnapshot>> {
+        val ref = FirebaseFirestore.getInstance().collection(collectionPath).document(documentPath)
         return FirestoreDocumentLiveData(ref)
     }
 }

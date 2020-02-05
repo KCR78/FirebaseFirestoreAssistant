@@ -56,6 +56,14 @@ abstract class FirestoreRepo<T> : Repo<T>{
         return api.pushToFirestore(collectionPath, t)
     }
 
+    override suspend fun updateDocumentToFirestore(
+        collectionPath: String,
+        documentPath: String,
+        value: Any
+    ): FirestoreResult<Unit> {
+        return api.postDocumentToFirestore(collectionPath, documentPath, value)
+    }
+
     override suspend fun updateChildToFirestore(
         collectionPath: String,
         documentPath: String,

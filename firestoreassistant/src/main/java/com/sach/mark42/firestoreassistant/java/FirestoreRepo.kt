@@ -17,14 +17,14 @@ abstract class FirestoreRepo<T> : Repo<T> {
 
     private val api = FirestoreApi()
 
-    override fun getCollectionFromFirestoreCache(path: String): CompletableFuture<T?> =
+    override fun getCollectionFromFirestoreCache(collectionPath: String): CompletableFuture<T?> =
         GlobalScope.future {
-            val result = api.getCollectionFromFirestoreCache(path)
+            val result = api.getCollectionFromFirestoreCache(collectionPath)
             convertQuerySnapshot(result.value)
         }
 
-    override fun getCollectionFromFirestore(path: String): LiveData<T?> {
-        val result = api.getCollectionFromFirestore(path)
+    override fun getCollectionFromFirestore(collectionPath: String): LiveData<T?> {
+        val result = api.getCollectionFromFirestore(collectionPath)
         val function = Function<FirestoreResult<QuerySnapshot>, T> {
             if (it.isSuccess()) {
                 convertQuerySnapshot(it.value)
@@ -36,16 +36,16 @@ abstract class FirestoreRepo<T> : Repo<T> {
     }
 
     override fun getDocumentFromFirestoreCache(
-        path: String,
+        collectionPath: String,
         documentPath: String
     ): CompletableFuture<T?> =
         GlobalScope.future {
-            val result = api.getDocumentFromFirestoreCache(path, documentPath)
+            val result = api.getDocumentFromFirestoreCache(collectionPath, documentPath)
             convertDocumentSnapshot(result.value)
         }
 
-    override fun getDocumentFromFirestore(path: String, documentPath: String): LiveData<T?> {
-        val result = api.getDocumentFromFirestore(path, documentPath)
+    override fun getDocumentFromFirestore(collectionPath: String, documentPath: String): LiveData<T?> {
+        val result = api.getDocumentFromFirestore(collectionPath, documentPath)
         val function = Function<FirestoreResult<DocumentSnapshot>, T> {
             if (it.isSuccess()) {
                 convertDocumentSnapshot(it.value)
@@ -56,36 +56,45 @@ abstract class FirestoreRepo<T> : Repo<T> {
         return Transformations.map(result, function)
     }
 
-    override fun pushToFirestore(path: String, t: Any): CompletableFuture<String?> =
+    override fun pushToFirestore(collectionPath: String, t: Any): CompletableFuture<String?> =
         GlobalScope.future {
-            api.pushToFirestore(path, t)
+            api.pushToFirestore(collectionPath, t)
         }
 
     override fun updateChildToFirestore(
-        path: String,
+        collectionPath: String,
         documentPath: String,
         field: String,
         value: Any
     ): CompletableFuture<FirestoreResult<Unit>> =
         GlobalScope.future {
-            api.updateChildToFirestore(path, documentPath, field, value)
+            api.updateChildToFirestore(collectionPath, documentPath, field, value)
+        }
+
+    override fun updateDocumentToFirestore(
+        collectionPath: String,
+        documentPath: String,
+        value: Any
+    ): CompletableFuture<FirestoreResult<Unit>> =
+        GlobalScope.future {
+            api.postDocumentToFirestore(collectionPath, documentPath, value)
         }
 
     override fun updateChildrenToFirestore(
-        path: String,
+        collectionPath: String,
         documentPath: String,
         updates: HashMap<String, Any?>
     ): CompletableFuture<FirestoreResult<Unit>> =
         GlobalScope.future {
-            api.updateChildrenToFirestore(path, documentPath, updates)
+            api.updateChildrenToFirestore(collectionPath, documentPath, updates)
         }
 
     override fun deleteFromFirestore(
-        path: String,
+        collectionPath: String,
         documentPath: String
     ): CompletableFuture<FirestoreResult<Unit>> =
         GlobalScope.future {
-            api.deleteFromFirestore(path, documentPath)
+            api.deleteFromFirestore(collectionPath, documentPath)
         }
 
     override fun getQueryFromFirestoreCache(query: Query): CompletableFuture<T?> =
@@ -106,7 +115,7 @@ abstract class FirestoreRepo<T> : Repo<T> {
         return Transformations.map(result, function)
     }
 
-    abstract fun convertDocumentSnapshot(value: DocumentSnapshot?): T?
+    abstract fun convertDocumentSnapshot(documentSnapshot: DocumentSnapshot?): T?
 
-    abstract fun convertQuerySnapshot(value: QuerySnapshot?): T?
+    abstract fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): T?
 }
