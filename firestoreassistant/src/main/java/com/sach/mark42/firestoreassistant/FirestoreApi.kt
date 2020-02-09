@@ -62,7 +62,7 @@ class FirestoreApi {
         return FirestoreHelper().updateFields(collectionPath, documentPath, updates)
     }
 
-    suspend fun deleteFromFirestore(collectionPath: String, documentPath: String): FirestoreResult<Unit> {
+    suspend fun deleteDocumentFromFirestore(collectionPath: String, documentPath: String): FirestoreResult<Unit> {
         return FirestoreHelper().delete(collectionPath, documentPath)
     }
 

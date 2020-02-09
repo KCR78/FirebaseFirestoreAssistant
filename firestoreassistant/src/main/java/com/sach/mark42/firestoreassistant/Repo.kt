@@ -16,7 +16,7 @@ internal interface Repo<T> {
                                        field: String, value: Any): FirestoreResult<Unit>
     suspend fun updateChildrenToFirestore(collectionPath: String, documentPath: String,
                                           updates: HashMap<String, Any?>): FirestoreResult<Unit>
-    suspend fun deleteFromFirestore(collectionPath: String, documentPath: String): FirestoreResult<Unit>
+    suspend fun deleteDocumentFromFirestore(collectionPath: String, documentPath: String): FirestoreResult<Unit>
     suspend fun getQueryFromFirestoreCache(query: Query): T?
     fun getQueryFromFirestore(query: Query): LiveData<T?>
 }

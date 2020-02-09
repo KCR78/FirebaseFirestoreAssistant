@@ -81,11 +81,11 @@ abstract class FirestoreRepo<T> : Repo<T>{
         return api.updateChildrenToFirestore(collectionPath, documentPath, updates)
     }
 
-    override suspend fun deleteFromFirestore(
+    override suspend fun deleteDocumentFromFirestore(
         collectionPath: String,
         documentPath: String
     ): FirestoreResult<Unit> {
-        return api.deleteFromFirestore(collectionPath, documentPath)
+        return api.deleteDocumentFromFirestore(collectionPath, documentPath)
     }
 
     override suspend fun getQueryFromFirestoreCache(query: Query): T? {
