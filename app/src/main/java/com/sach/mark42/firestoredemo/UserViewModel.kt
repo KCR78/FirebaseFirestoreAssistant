@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.util.HashMap
 
@@ -94,6 +95,47 @@ class UserViewModel: ViewModel() {
             } else {
                 //Display error message
                 result.errorMessage
+            }
+        }
+    }
+
+    fun getUsersFromFirestore(activity: AppCompatActivity) {
+        userRepo.getCollectionFromFirestore(UserRepo.collectionPath()).observe(activity, Observer { users ->
+            users?.forEach {
+                // update your adapter
+            }
+        })
+    }
+
+    fun getUsersFromCache() {
+        viewModelScope.launch {
+            val users = userRepo.getCollectionFromFirestoreCache(UserRepo.collectionPath())
+            users?.forEach {
+                // update your adapter
+            }
+        }
+    }
+
+    fun queryUsersFromFirestore(activity: AppCompatActivity) {
+        val query = FirebaseFirestore.getInstance().collection("users").
+            whereEqualTo("fName", "sachi").
+            whereEqualTo("email", "android@email")
+        userRepo.getQueryFromFirestore(query).observe(activity, Observer { users ->
+            users?.forEach {
+                // update your adapter
+            }
+        })
+    }
+
+    fun queryUsersFromCache() {
+        val query = FirebaseFirestore.getInstance().collection("users").
+            orderBy("fname").
+            startAt("sach").
+            endAt("sach" + "\uf8ff")
+        viewModelScope.launch {
+            val users = userRepo.getQueryFromFirestoreCache(query)
+            users?.forEach {
+                // update your adapter
             }
         }
     }

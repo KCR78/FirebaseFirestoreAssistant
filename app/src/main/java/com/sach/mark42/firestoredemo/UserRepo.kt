@@ -9,8 +9,15 @@ class UserRepo: FirestoreRepo<User>(){
         return documentSnapshot?.toObject(User::class.java)
     }
 
-    override fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): User? {
-        return null
+    override fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): List<User>? {
+        val documents = querySnapshot?.documents?.mapNotNull {
+            try {
+                it.toObject(User::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        return documents
     }
 
     companion object {

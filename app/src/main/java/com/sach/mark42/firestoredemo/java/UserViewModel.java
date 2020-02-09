@@ -9,10 +9,13 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.sach.mark42.firestoreassistant.FirestoreResult;
 import com.sach.mark42.firestoredemo.R;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class UserViewModel extends ViewModel {
@@ -123,6 +126,102 @@ public class UserViewModel extends ViewModel {
                 }
             }
         });
+    }
+
+    public void getUsersFromDatabase(AppCompatActivity activity) {
+        userRepo.getCollectionFromFirestore("users").observe(activity, new Observer<List<User>>() {
+            @Override
+            public void onChanged(List<User> users) {
+                for (User user : users) {
+                    // update your adapter
+                }
+            }
+        });
+    }
+
+    public void queryUsersFromDatabase(AppCompatActivity activity) {
+        Query query = FirebaseFirestore.getInstance().collection("users").
+                whereEqualTo("fName", "sachi").
+                whereEqualTo("email", "android@email");
+        userRepo.getQueryFromFirestore(query).observe(activity, new Observer<List<User>>() {
+            @Override
+            public void onChanged(List<User> users) {
+                for (User user : users) {
+                    // update your adapter
+                }
+            }
+        });
+    }
+
+    public void getUsersFromCache(AppCompatActivity activity) {
+        getUsersFromCache().observe(activity, new Observer<List<User>>() {
+            @Override
+            public void onChanged(List<User> users) {
+                for (User user : users) {
+                    // update your adapter
+                }
+            }
+        });
+    }
+
+    public void queryUsersFromCache(AppCompatActivity activity) {
+        Query query = FirebaseFirestore.getInstance().collection("users").
+                orderBy("fname").
+                startAt("sach").
+                endAt("sach" + "\uf8ff");
+        queryUsersFromCache(query).observe(activity, new Observer<List<User>>() {
+            @Override
+            public void onChanged(List<User> users) {
+                for (User user : users) {
+                    // update your adapter
+                }
+            }
+        });
+    }
+
+    private static LiveData<List<User>> getUsersFromCache() {
+        final UserRepo userRepo = UserRepo.getInstance();
+        final MutableLiveData<List<User>> liveData = new MutableLiveData<>();
+        new AsyncTask<Void, Void, LiveData<List<User>>>() {
+
+            @Override
+            protected LiveData<List<User>> doInBackground(Void... voids) {
+                try {
+                    List<User> result = userRepo.
+                            getCollectionFromFirestoreCache("users").get();
+                    liveData.postValue(result);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+                return liveData;
+            }
+        }.execute();
+
+        return liveData;
+    }
+
+    private static LiveData<List<User>> queryUsersFromCache(final Query query) {
+        final UserRepo userRepo = UserRepo.getInstance();
+        final MutableLiveData<List<User>> liveData = new MutableLiveData<>();
+        new AsyncTask<Void, Void, LiveData<List<User>>>() {
+
+            @Override
+            protected LiveData<List<User>> doInBackground(Void... voids) {
+                try {
+                    List<User> result = userRepo.getQueryFromFirestoreCache(query).get();
+                    liveData.postValue(result);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
+                return liveData;
+            }
+        }.execute();
+
+        return liveData;
     }
 
     private static LiveData<User> getUserFromCache(final String collectionPath, final String documentPath) {

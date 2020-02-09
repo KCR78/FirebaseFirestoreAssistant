@@ -6,6 +6,9 @@ import com.sach.mark42.firestoreassistant.java.FirestoreRepo;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class UserRepo extends FirestoreRepo<User> {
 
     private static UserRepo INSTANCE;
@@ -18,8 +21,17 @@ public class UserRepo extends FirestoreRepo<User> {
 
     @Nullable
     @Override
-    public User convertQuerySnapshot(@Nullable QuerySnapshot querySnapshot) {
-        return null;
+    public List<User> convertQuerySnapshot(@Nullable QuerySnapshot value) {
+        ArrayList<User> users = new ArrayList<>();
+        for (DocumentSnapshot snapshot: value.getDocuments()) {
+            try {
+                User user = snapshot.toObject(User.class);
+                users.add(user);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return users;
     }
 
     public static UserRepo getInstance() {
