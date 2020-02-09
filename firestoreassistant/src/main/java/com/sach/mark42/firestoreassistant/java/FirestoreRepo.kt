@@ -17,15 +17,15 @@ abstract class FirestoreRepo<T> : Repo<T> {
 
     private val api = FirestoreApi()
 
-    override fun getCollectionFromFirestoreCache(collectionPath: String): CompletableFuture<T?> =
+    override fun getCollectionFromFirestoreCache(collectionPath: String): CompletableFuture<List<T>?> =
         GlobalScope.future {
             val result = api.getCollectionFromFirestoreCache(collectionPath)
             convertQuerySnapshot(result.value)
         }
 
-    override fun getCollectionFromFirestore(collectionPath: String): LiveData<T?> {
+    override fun getCollectionFromFirestore(collectionPath: String): LiveData<List<T>?> {
         val result = api.getCollectionFromFirestore(collectionPath)
-        val function = Function<FirestoreResult<QuerySnapshot>, T> {
+        val function = Function<FirestoreResult<QuerySnapshot>, List<T>> {
             if (it.isSuccess()) {
                 convertQuerySnapshot(it.value)
             } else {
@@ -94,18 +94,18 @@ abstract class FirestoreRepo<T> : Repo<T> {
         documentPath: String
     ): CompletableFuture<FirestoreResult<Unit>> =
         GlobalScope.future {
-            api.deleteFromFirestore(collectionPath, documentPath)
+            api.deleteDocumentFromFirestore(collectionPath, documentPath)
         }
 
-    override fun getQueryFromFirestoreCache(query: Query): CompletableFuture<T?> =
+    override fun getQueryFromFirestoreCache(query: Query): CompletableFuture<List<T>?> =
         GlobalScope.future {
             val result = api.getQueryFromFirestoreCache(query)
             convertQuerySnapshot(result.value)
         }
 
-    override fun getQueryFromFirestore(query: Query): LiveData<T?> {
+    override fun getQueryFromFirestore(query: Query): LiveData<List<T>?> {
         val result = api.getQueryFromFirestore(query)
-        val function = Function<FirestoreResult<QuerySnapshot>, T> {
+        val function = Function<FirestoreResult<QuerySnapshot>, List<T>> {
             if (it.isSuccess()) {
                 convertQuerySnapshot(it.value)
             } else {
@@ -117,5 +117,5 @@ abstract class FirestoreRepo<T> : Repo<T> {
 
     abstract fun convertDocumentSnapshot(documentSnapshot: DocumentSnapshot?): T?
 
-    abstract fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): T?
+    abstract fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): List<T>?
 }

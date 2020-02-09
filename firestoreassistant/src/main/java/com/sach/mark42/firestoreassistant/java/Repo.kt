@@ -7,8 +7,8 @@ import java.util.HashMap
 import java.util.concurrent.CompletableFuture
 
 internal interface Repo<T> {
-    fun getCollectionFromFirestoreCache(collectionPath: String): CompletableFuture<T?>
-    fun getCollectionFromFirestore(collectionPath: String): LiveData<T?>
+    fun getCollectionFromFirestoreCache(collectionPath: String): CompletableFuture<List<T>?>
+    fun getCollectionFromFirestore(collectionPath: String): LiveData<List<T>?>
     fun getDocumentFromFirestoreCache(collectionPath: String, documentPath: String) : CompletableFuture<T?>
     fun getDocumentFromFirestore(collectionPath: String, documentPath: String) : LiveData<T?>
     fun pushToFirestore(collectionPath: String, t: Any): CompletableFuture<String?>
@@ -19,6 +19,6 @@ internal interface Repo<T> {
     fun updateChildrenToFirestore(collectionPath: String, documentPath: String, updates: HashMap<String, Any?>)
             : CompletableFuture<FirestoreResult<Unit>>
     fun deleteFromFirestore(collectionPath: String, documentPath: String): CompletableFuture<FirestoreResult<Unit>>
-    fun getQueryFromFirestoreCache(query: Query): CompletableFuture<T?>
-    fun getQueryFromFirestore(query: Query): LiveData<T?>
+    fun getQueryFromFirestoreCache(query: Query): CompletableFuture<List<T>?>
+    fun getQueryFromFirestore(query: Query): LiveData<List<T>?>
 }

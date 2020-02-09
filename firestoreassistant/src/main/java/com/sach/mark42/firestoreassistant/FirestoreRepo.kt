@@ -12,14 +12,14 @@ abstract class FirestoreRepo<T> : Repo<T>{
 
     private val api = FirestoreApi()
 
-    override suspend fun getCollectionFromFirestoreCache(collectionPath: String): T? {
+    override suspend fun getCollectionFromFirestoreCache(collectionPath: String): List<T>? {
         val result = api.getCollectionFromFirestoreCache(collectionPath)
         return convertQuerySnapshot(result.value)
     }
 
-    override fun getCollectionFromFirestore(collectionPath: String): LiveData<T?> {
+    override fun getCollectionFromFirestore(collectionPath: String): LiveData<List<T>?> {
         val result = api.getCollectionFromFirestore(collectionPath)
-        val function = Function<FirestoreResult<QuerySnapshot>, T> {
+        val function = Function<FirestoreResult<QuerySnapshot>, List<T>> {
             if (it.isSuccess()) {
                 convertQuerySnapshot(it.value)
             } else {
@@ -88,14 +88,14 @@ abstract class FirestoreRepo<T> : Repo<T>{
         return api.deleteDocumentFromFirestore(collectionPath, documentPath)
     }
 
-    override suspend fun getQueryFromFirestoreCache(query: Query): T? {
+    override suspend fun getQueryFromFirestoreCache(query: Query): List<T>? {
         val result = api.getQueryFromFirestoreCache(query)
         return convertQuerySnapshot(result.value)
     }
 
-    override fun getQueryFromFirestore(query: Query): LiveData<T?> {
+    override fun getQueryFromFirestore(query: Query): LiveData<List<T>?> {
         val result = api.getQueryFromFirestore(query)
-        val function = Function<FirestoreResult<QuerySnapshot>, T> {
+        val function = Function<FirestoreResult<QuerySnapshot>, List<T>> {
             if (it.isSuccess()) {
                 convertQuerySnapshot(it.value)
             } else {
@@ -107,6 +107,6 @@ abstract class FirestoreRepo<T> : Repo<T>{
 
     abstract fun convertDocumentSnapshot(documentSnapshot: DocumentSnapshot?): T?
 
-    abstract fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): T?
+    abstract fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): List<T>?
 
 }
