@@ -85,9 +85,9 @@ class UserViewModel: ViewModel() {
         }
     }
 
-    fun deleteFromFirestore() {
+    fun deleteDocumentFromFirestore() {
         viewModelScope.launch {
-            val result = userRepo.deleteFromFirestore(UserRepo.collectionPath(),
+            val result = userRepo.deleteDocumentFromFirestore(UserRepo.collectionPath(),
                 "")
             if (result.isSuccess()) {
                 //Display success message

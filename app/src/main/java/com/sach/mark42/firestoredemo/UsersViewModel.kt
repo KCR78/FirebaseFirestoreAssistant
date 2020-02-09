@@ -13,7 +13,7 @@ class UsersViewModel: ViewModel() {
         UsersRepo.getInstance()
     }
 
-    fun getUsersFromDatabase(activity: AppCompatActivity) {
+    fun getUsersFromFirestore(activity: AppCompatActivity) {
         usersRepo.getCollectionFromFirestore(UsersRepo.collectionPath()).observe(activity, Observer { users ->
             users?.forEach {
                 // update your adapter
@@ -30,7 +30,7 @@ class UsersViewModel: ViewModel() {
         }
     }
 
-    fun queryUsersFromDatabase(activity: AppCompatActivity) {
+    fun queryUsersFromFirestore(activity: AppCompatActivity) {
         val query = FirebaseFirestore.getInstance().collection("users").
             whereEqualTo("fName", "sachi").
             whereEqualTo("email", "android@email")
