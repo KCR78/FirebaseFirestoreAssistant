@@ -14,17 +14,16 @@ class MainActivity : AppCompatActivity() {
 
         val userViewModel = ViewModelProvider(this).get(UserViewModel::class.java)
 
-        val usersViewModel = ViewModelProvider(this).get(UsersViewModel::class.java)
-        //usersViewModel.getUsersFromCache()
-        //usersViewModel.getUsersFromFirestore(this)
-        //usersViewModel.queryUsersFromCache()
-        //usersViewModel.queryUsersFromFirestore(this)
+        userViewModel.getUsersFromCache()
+        userViewModel.getUsersFromFirestore(this)
+        userViewModel.queryUsersFromCache()
+        userViewModel.queryUsersFromFirestore(this)
 
-        //userViewModel.getUserFromFirestore(this)
+        userViewModel.getUserFromFirestore(this)
         //userViewModel.getUserFromCache(this)
 
         button.setOnClickListener {
-            pushUser(userViewModel)
+            //pushUser(userViewModel)
             //updateUserFields(userViewModel)
             //updateChild(userViewModel)
             //updateUser(userViewModel)

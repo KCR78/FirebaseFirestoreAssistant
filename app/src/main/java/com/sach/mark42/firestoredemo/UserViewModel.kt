@@ -1,5 +1,6 @@
 package com.sach.mark42.firestoredemo
 
+import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -30,7 +31,7 @@ class UserViewModel: ViewModel() {
             val fName = activity.findViewById<TextView>(R.id.firstName)
             val lName = activity.findViewById<TextView>(R.id.lastName)
             val email = activity.findViewById<TextView>(R.id.email)
-            val user = userRepo.getDocumentFromFirestoreCache(UserRepo.collectionPath(), "")
+            val user = userRepo.getDocumentFromFirestoreCache(UserRepo.collectionPath(), "qUiuSLFQXTqYbEf6mxBV")
             fName.text = user?.firstName
             lName.text = user?.lastName
             email.text = user?.email
@@ -49,7 +50,7 @@ class UserViewModel: ViewModel() {
     fun updateUserToFirestore(user: User) {
         viewModelScope.launch {
             val result = userRepo.updateDocumentToFirestore(
-                UserRepo.collectionPath(),"", user)
+                UserRepo.collectionPath(),"mjPWSp0CDWlGetcgsotL", user)
             if (result.isSuccess()) {
                 //Display success message
             } else {
@@ -62,7 +63,7 @@ class UserViewModel: ViewModel() {
     fun updateUserFieldToFirestore() {
         viewModelScope.launch {
             val result = userRepo.updateChildToFirestore(UserRepo.collectionPath(),
-                "", FIRESTORE_KEY.USER.firstName, "Sachin")
+                "mjPWSp0CDWlGetcgsotL", FIRESTORE_KEY.USER.lastName, "Sahu")
             if (result.isSuccess()) {
                 //Display success message
             } else {
@@ -76,7 +77,7 @@ class UserViewModel: ViewModel() {
         viewModelScope.launch {
             //if path is null then it'll create a new node
             val result = userRepo.updateChildrenToFirestore(UserRepo.collectionPath(),
-                "", updates)
+                "mjPWSp0CDWlGetcgsotL", updates)
             if (result.isSuccess()) {
                 //Display success message
             } else {
@@ -89,7 +90,7 @@ class UserViewModel: ViewModel() {
     fun deleteDocumentFromFirestore() {
         viewModelScope.launch {
             val result = userRepo.deleteDocumentFromFirestore(UserRepo.collectionPath(),
-                "")
+                "F7koA7eRAsUjWtAzQrL5")
             if (result.isSuccess()) {
                 //Display success message
             } else {
@@ -102,7 +103,7 @@ class UserViewModel: ViewModel() {
     fun getUsersFromFirestore(activity: AppCompatActivity) {
         userRepo.getCollectionFromFirestore(UserRepo.collectionPath()).observe(activity, Observer { users ->
             users?.forEach {
-                // update your adapter
+                // update your adapter in activity
             }
         })
     }
@@ -111,31 +112,31 @@ class UserViewModel: ViewModel() {
         viewModelScope.launch {
             val users = userRepo.getCollectionFromFirestoreCache(UserRepo.collectionPath())
             users?.forEach {
-                // update your adapter
+                // update your adapter in activity
             }
         }
     }
 
     fun queryUsersFromFirestore(activity: AppCompatActivity) {
         val query = FirebaseFirestore.getInstance().collection("users").
-            whereEqualTo("fName", "sachi").
-            whereEqualTo("email", "android@email")
+            orderBy(FIRESTORE_KEY.USER.firstName).
+            whereEqualTo(FIRESTORE_KEY.USER.lastName, "Sahu").
+            limitToLast(2)
         userRepo.getQueryFromFirestore(query).observe(activity, Observer { users ->
             users?.forEach {
-                // update your adapter
+                // update your adapter in activity
             }
         })
     }
 
     fun queryUsersFromCache() {
         val query = FirebaseFirestore.getInstance().collection("users").
-            orderBy("fname").
-            startAt("sach").
-            endAt("sach" + "\uf8ff")
+            whereEqualTo(FIRESTORE_KEY.USER.firstName, "Sachi").
+            whereEqualTo(FIRESTORE_KEY.USER.lastName, "Sahu")
         viewModelScope.launch {
             val users = userRepo.getQueryFromFirestoreCache(query)
             users?.forEach {
-                // update your adapter
+                // update your adapter in activity
             }
         }
     }

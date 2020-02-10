@@ -22,12 +22,10 @@ public class JavaActivity extends AppCompatActivity {
 
         final UserViewModel userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
-        final UsersViewModel usersViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
-
-        //usersViewModel.getUsersFromDatabase(this);
-        //usersViewModel.getUsersFromCache(this);
-        //usersViewModel.queryUsersFromDatabase(this);
-        //usersViewModel.queryUsersFromCache(this);
+        //userViewModel.getUsersFromDatabase(this);
+        //userViewModel.getUsersFromCache(this);
+        //userViewModel.queryUsersFromDatabase(this);
+        //userViewModel.queryUsersFromCache(this);
 
         //userViewModel.getUserFromDatabase(this);
         //userViewModel.getUserFromCache(this);
