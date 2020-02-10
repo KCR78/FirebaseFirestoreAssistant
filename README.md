@@ -24,7 +24,7 @@ dependencies {
           implementation 'com.google.firebase:firebase-core:17.2.1'
           implementation 'com.google.firebase:firebase-firestore:21.3.1'
           
-          implementation 'com.github.Im-Mark42:FirebaseFirestoreAssistant::0.1-Beta'
+          implementation 'com.github.Im-Mark42:FirebaseFirestoreAssistant::1.0.0'
           
           //Kotlin ViewModelScope only for kotlin user
           implementation group: 'androidx.lifecycle', name: 'lifecycle-viewmodel-ktx', version: '2.2.0-rc02'
@@ -203,7 +203,7 @@ public class FIRESTORE_KEY {
 }
 ```
 
-* Create a Repository class and extend `FirestoreRepo<T>()` class (use your data class in case of T). Override `convertDocumentSnapshot()` function and provide your data class, so that it convert dataSnapshot to your data class. If you want a singleton class then create a `companion object`. In this case i am creating a repo class for user.
+* Create a Repository class and extend `FirestoreRepo<T>()` class (use your data class in case of T). Override `convertDocumentSnapshot()` and `convertQuerySnapshot()` functions, so that it convert documentSnapshot and querySnapshot to your data class and listof data class respectively. If you want a singleton class then create a `companion object`. In this case i am creating a repo class for user.
 ##### Note: make sure to import right package i.e `import com.sach.mark42.firestoreassistant.FirestoreRepo`
 
 ```
@@ -212,8 +212,15 @@ class UserRepo: FirestoreRepo<User>(){
         return documentSnapshot?.toObject(User::class.java)
     }
 
-    override fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): User? {
-        return null
+    override fun convertQuerySnapshot(querySnapshot: QuerySnapshot?): List<User>? {
+        val documents = querySnapshot?.documents?.mapNotNull {
+            try {
+                it.toObject(User::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        return documents
     }
 
     companion object {
@@ -232,7 +239,7 @@ class UserRepo: FirestoreRepo<User>(){
 
 **Java User**
 
-Create a Repository class and extend `FirestoreRepo<T>()` class (use your model class in case of T). Override `convertDocumentSnapshot()` method and provide your model class, so that it convert dataSnapshot to your model class. If you want a singleton class then create a `static` method. In this case i am creating a repo class for user.
+Create a Repository class and extend `FirestoreRepo<T>()` class (use your model class in case of T). Override `convertDocumentSnapshot()` and `convertQuerySnapshot()` methods, so that it convert documentSnapshot and querySnapshot to your model class and listof model class respectively. If you want a singleton class then create a `static` method. In this case i am creating a repo class for user.
 ##### Note: make sure to import right package i.e `import com.sach.mark42.firestoreassistant.java.FirestoreRepo;`
 
 ```
@@ -248,8 +255,17 @@ public class UserRepo extends FirestoreRepo<User> {
 
     @Nullable
     @Override
-    public User convertQuerySnapshot(@Nullable QuerySnapshot querySnapshot) {
-        return null;
+    public List<User> convertQuerySnapshot(@Nullable QuerySnapshot value) {
+        ArrayList<User> users = new ArrayList<>();
+        for (DocumentSnapshot snapshot: value.getDocuments()) {
+            try {
+                User user = snapshot.toObject(User.class);
+                users.add(user);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return users;
     }
 
     public static UserRepo getInstance() {
@@ -266,16 +282,15 @@ public class UserRepo extends FirestoreRepo<User> {
 ```
 class UserViewModel : ViewModel() {
 
-    val userRepo by lazy {
+    private val userRepo by lazy {
         UserRepo.getInstance()
     }
 
-    fun getUserFromDatabase(activity: AppCompatActivity) {
+    fun getUserFromFirestore(activity: AppCompatActivity) {
         val fName = activity.findViewById<TextView>(R.id.firstName)
         val lName = activity.findViewById<TextView>(R.id.lastName)
         val email = activity.findViewById<TextView>(R.id.email)
-        
-        userRepo.getFromDatabase(UserRepo.userPath("-LxjJXsJdbZiEjjh1A89")).observe(activity, Observer { user ->
+        userRepo.getDocumentFromFirestore(UserRepo.collectionPath(), "qUiuSLFQXTqYbEf6mxBV").observe(activity, Observer { user ->
             fName.text = user?.firstName
             lName.text = user?.lastName
             email.text = user?.email
@@ -287,19 +302,17 @@ class UserViewModel : ViewModel() {
             val fName = activity.findViewById<TextView>(R.id.firstName)
             val lName = activity.findViewById<TextView>(R.id.lastName)
             val email = activity.findViewById<TextView>(R.id.email)
-            
-            val user = userRepo.getFromDatabaseCache(UserRepo.userPath("-LxjJXsJdbZiEjjh1A89"))
-            
+            val user = userRepo.getDocumentFromFirestoreCache(UserRepo.collectionPath(), "qUiuSLFQXTqYbEf6mxBV")
             fName.text = user?.firstName
             lName.text = user?.lastName
             email.text = user?.email
         }
     }
 
-    fun pushUserToDatabase(user: User) {
+    fun pushUserToFirestore(user: User) {
         viewModelScope.launch {
-            //it return the firebase push id key
-            val key = userRepo.pushToDatabase(UserRepo.path(), user)
+            //it'll return the firestore push id key
+            val key = userRepo.pushToFirestore(UserRepo.collectionPath(), user)
             user.userPushId = key
             // show confirmation message to user
         }
@@ -307,13 +320,13 @@ class UserViewModel : ViewModel() {
 }
 ```
 
-`userRepo.getFromDatabase()` return a `LiveData<T>` so that you will get realtime updates if anything changes happen in database. you need to observe it and update your UI when ever there is some change in database.
+`userRepo.getDocumentFromFirestore()` return a `LiveData<T>` so that you will get realtime updates if anything changes happen in firestore. you need to observe it and update your UI when ever there is some change in firestore.
 
-`userRepo.getFromDatabaseCache()` return `T` (in this case `User`) from your local database. It will not make any request to your Firebase database. 
+`userRepo.getDocumentFromFirestoreCache()` return `T` (in this case `User`) from your local database. It will not make any request to your Firebase firestore. 
 
-`pushUserToDatabase(user: User)` push your data class to database and it'll return the pushId. you can save pushId if you need it later.
+`userRepo.pushToFirestore()` push your data class to database and it'll return the pushId. you can save pushId if you need it later.
 
-For more detail refer to [UserViewModel.kt](https://www.github.com/Im-Mark42/FirebaseDatabaseAssistant/tree/master/app/src/main/java/com/sach/mark42/databasedemo/UserViewModel.kt)
+For more detail refer to [UserViewModel.kt](https://github.com/Im-Mark42/FirebaseFirestoreAssistant/blob/master/app/src/main/java/com/sach/mark42/firestoredemo/UserViewModel.kt)
 
 **Java User**
 
@@ -329,7 +342,8 @@ public class UserViewModel extends ViewModel {
         final TextView lName = activity.findViewById(R.id.lastName);
         final TextView email = activity.findViewById(R.id.email);
 
-        userRepo.getFromDatabase("users/-LxjJXsJdbZiEjjh1A89").observe(activity, new Observer<User>() {
+        userRepo.getDocumentFromFirestore("users", "qUiuSLFQXTqYbEf6mxBV")
+                .observe(activity, new Observer<User>() {
             @Override
             public void onChanged(User user) {
                 fName.setText(user.getFirstName());
@@ -340,7 +354,8 @@ public class UserViewModel extends ViewModel {
     }
 
     public void getUserFromCache(final AppCompatActivity activity) {
-        getUserFromCache("users/-LxjJXsJdbZiEjjh1A89").observe(activity, new Observer<User>() {
+        getUserFromCache("users", "qUiuSLFQXTqYbEf6mxBV")
+                .observe(activity, new Observer<User>() {
             @Override
             public void onChanged(User user) {
                 TextView fName = activity.findViewById(R.id.firstName);
@@ -354,8 +369,8 @@ public class UserViewModel extends ViewModel {
         });
     }
 
-    public void pushUserToDatabase(AppCompatActivity activity, User user) {
-        pushUserToDatabase(user).observe(activity, new Observer<String>() {
+    public void pushUserToFirestore(AppCompatActivity activity, String collectionPath, User user) {
+        pushUserToFirestore(collectionPath, user).observe(activity, new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 //it return the firebase push id key
@@ -365,7 +380,7 @@ public class UserViewModel extends ViewModel {
         });
     }
     
-    private static LiveData<User> getUserFromCache(final String path) {
+    private static LiveData<User> getUserFromCache(final String collectionPath, final String documentPath) {
         final UserRepo userRepo = UserRepo.getInstance();
         final MutableLiveData<User> liveData = new MutableLiveData<>();
         new AsyncTask<Void, Void, LiveData<User>>() {
@@ -373,7 +388,7 @@ public class UserViewModel extends ViewModel {
             @Override
             protected LiveData<User> doInBackground(Void... voids) {
                 try {
-                    User result = userRepo.getFromDatabaseCache(path).get();
+                    User result = userRepo.getDocumentFromFirestoreCache(collectionPath, documentPath).get();
                     liveData.postValue(result);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -387,14 +402,14 @@ public class UserViewModel extends ViewModel {
         return liveData;
     }
 
-    private static LiveData<String> pushUserToDatabase(final User user) {
+    private static LiveData<String> pushUserToFirestore(final String collectionPath, final User user) {
         final UserRepo userRepo = UserRepo.getInstance();
         final MutableLiveData<String> liveData = new MutableLiveData<>();
         new AsyncTask<Void, Void, LiveData<String>>() {
             @Override
             protected LiveData<String> doInBackground(Void... voids) {
                 try {
-                    String key = userRepo.pushToDatabase("users", user).get();
+                    String key = userRepo.pushToFirestore(collectionPath, user).get();
                     liveData.postValue(key);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -409,13 +424,13 @@ public class UserViewModel extends ViewModel {
 }
 ```
 
-`userRepo.getFromDatabase()` return a `LiveData<T>` so that you will get realtime updates if anything changes happen in database. you need to observe it and update your UI when ever there is some change in database.
+`userRepo.getDocumentFromFirestore()` return a `LiveData<T>` so that you will get realtime updates if anything changes happen in firestore. you need to observe it and update your UI when ever there is some change in firestore.
 
-`userRepo.getFromDatabaseCache().get()` return `T` (in this case `User`) from your local database. Then update your UI using `LiveData<T>`. It will not make any request to your Firebase database. 
+`userRepo.getDocumentFromFirestoreCache().get()` return `T` (in this case `User`) from your local database. Then update your UI using `LiveData<T>`. It will not make any request to your Firebase firestore. 
 
-`pushToDatabase().get()` push your data class to database and it'll return the pushId. you can save pushId if you need it later.
+`pushToFirestore().get()` push your data class to firestore and it'll return the pushId. you can save pushId if you need it later.
 
-For more detail refer to [UserViewModel.java](https://www.github.com/Im-Mark42/FirebaseDatabaseAssistant/tree/master/app/src/main/java/com/sach/mark42//databasedemo/java/UserViewModel.java)
+For more detail refer to [UserViewModel.java](https://github.com/Im-Mark42/FirebaseFirestoreAssistant/blob/master/app/src/main/java/com/sach/mark42/firestoredemo/java/UserViewModel.java)
 
 * Initialize `ViewModel` class in your `activity` class and call above methods.
 
@@ -423,7 +438,7 @@ For more detail refer to [UserViewModel.java](https://www.github.com/Im-Mark42/F
 val viewModel = ViewModelProvider(this).get(UserViewModel::class.java)
 ```
 
-For more detail refer to [MainActivity.kt](https://www.github.com/Im-Mark42/FirebaseDatabaseAssistant/tree/master/app/src/main/java/com/sach/mark42/databasedemo/MainActivity.kt)
+For more detail refer to [MainActivity.kt](https://github.com/Im-Mark42/FirebaseFirestoreAssistant/blob/master/app/src/main/java/com/sach/mark42/firestoredemo/MainActivity.kt)
 
 **Java User**
 
@@ -431,143 +446,68 @@ For more detail refer to [MainActivity.kt](https://www.github.com/Im-Mark42/Fire
 final UserViewModel userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 ```
 
-For more detail refer to [JavaActivity.java](https://www.github.com/Im-Mark42/FirebaseDatabaseAssistant/tree/master/app/src/main/java/com/sach/mark42/databasedemo/java/JavaActivity.java)
+For more detail refer to [JavaActivity.java](https://github.com/Im-Mark42/FirebaseFirestoreAssistant/blob/master/app/src/main/java/com/sach/mark42/firestoredemo/java/JavaActivity.java)
 
 ### Work with list of data
 
-* Create a Repository class and extend `DatabaseRepo<T>()` and replace `T` with `List<User>` (use your data class in case of `User`). Override `convertDatabaseSnapshot()` and since `dataSnapshot` has list of data, you need to loop through the `dataSnapshot.children`. Use `companion object` for Singleton class.
-##### Note: make sure to import right package i.e `import com.sach.mark42.databaseassistant.DatabaseRepo`
+* In `UserViewModel` class, implement below function. Then update your adapter.
 
 ```
-class UsersRepo : DatabaseRepo<List<User>>() {
-    override fun convertDatabaseSnapshot(dataSnapshot: DataSnapshot?): List<User>? {
-        val users = dataSnapshot?.children?.map {
-            try {
-                val user = it.getValue(User::class.java)
-                user
-            } catch (e: Exception) {
-                null
-            }
-        }?.filterNotNull()
-
-        return users
-    }
-
-    companion object {
-        private var instance : UsersRepo? = null
-
-        fun getInstance(context: Context): UsersRepo {
-            if (instance == null)
-                instance = UsersRepo(context)
-
-            return instance!!
-        }
-        fun path() = "users"
-    }
-}
-```
-
-**Java User**
-
-Create a Repository class and extend `DatabaseRepo<T>()` and replace `T` with `List<User>` (use your data class in case of `User`). Override `convertDatabaseSnapshot()` and since `dataSnapshot` has list of data, you need to loop through the `dataSnapshot.getChildren()`. If you want a singleton class then create a `static` method.
-##### Note: make sure to import right package i.e `import com.sach.mark42.databaseassistant.java.DatabaseRepo;`
-
-```
-public class UsersRepo extends DatabaseRepo<List<User>> {
-
-    private static UsersRepo INSTANCE;
-
-    @Nullable
-    @Override
-    public List<User> convertDatabaseSnapshot(@Nullable DataSnapshot dataSnapshot) {
-        ArrayList<User> users = new ArrayList<>();
-        for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
-            try {
-                User user = snapshot.getValue(User.class);
-                users.add(user);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return users;
-    }
-
-    public static UsersRepo getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new UsersRepo();
-        }
-        return INSTANCE;
-    }
-}
-```
-
-* Create a `ViewModel` class and create a instance of your repo class. Implement some function as for your requirement. In this case i am creating a `UsersViewModel` class.
-
-```
-class UsersViewModel : ViewModel() {
-
-    val usersRepo by lazy {
-        UsersRepo.getInstance()
-    }
-
-    fun getUsersFromDatabase(activity: AppCompatActivity) {
-        usersRepo.getFromDatabase(UsersRepo.path()).observe(activity, Observer { users ->
+fun getUsersFromFirestore(activity: AppCompatActivity) {
+        userRepo.getCollectionFromFirestore(UserRepo.collectionPath()).observe(activity, Observer { users ->
             users?.forEach {
-                //update UI
+                // update your adapter in activity
             }
         })
-    }
+}
 
-    fun getUsersFromCache() {
+fun getUsersFromCache() {
         viewModelScope.launch {
-            val users = usersRepo.getFromDatabaseCache(UsersRepo.path())
+            val users = userRepo.getCollectionFromFirestoreCache(UserRepo.collectionPath())
             users?.forEach {
-                //update UI
+                // update your adapter in activity
             }
         }
-    }
 }
 ```
 
 **Java User**
 
-Create a `ViewModel` class and create a instance of your repo class. Implement some function as for your requirement. In this case i am creating a `UsersViewModel` class.
+In `UserViewModel` class, implement below function. Then update your adapter.
 
 ```
-public class UsersViewModel extends ViewModel {
-    private UsersRepo usersRepo = UsersRepo.getInstance();
-
-    public void getUsersFromDatabase(AppCompatActivity activity) {
-        usersRepo.getFromDatabase("users").observe(activity, new Observer<List<User>>() {
+public void getUsersFromDatabase(AppCompatActivity activity) {
+        userRepo.getCollectionFromFirestore("users").observe(activity, new Observer<List<User>>() {
             @Override
             public void onChanged(List<User> users) {
                 for (User user : users) {
-                    // update your adapter
+                    // update your adapter in activity
                 }
             }
         });
-    }
-    
-    public void getUsersFromCache(AppCompatActivity activity) {
+}
+
+public void getUsersFromCache(AppCompatActivity activity) {
         getUsersFromCache().observe(activity, new Observer<List<User>>() {
             @Override
             public void onChanged(List<User> users) {
                 for (User user : users) {
-                    // update your adapter
+                    // update your adapter in activity
                 }
             }
         });
-    }
-    
-    private static LiveData<List<User>> getUsersFromCache() {
-        final UsersRepo usersRepo = UsersRepo.getInstance();
+}
+
+private static LiveData<List<User>> getUsersFromCache() {
+        final UserRepo userRepo = UserRepo.getInstance();
         final MutableLiveData<List<User>> liveData = new MutableLiveData<>();
         new AsyncTask<Void, Void, LiveData<List<User>>>() {
 
             @Override
             protected LiveData<List<User>> doInBackground(Void... voids) {
                 try {
-                    List<User> result = usersRepo.getFromDatabaseCache("users").get();
+                    List<User> result = userRepo.
+                            getCollectionFromFirestoreCache("users").get();
                     liveData.postValue(result);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -579,28 +519,32 @@ public class UsersViewModel extends ViewModel {
         }.execute();
 
         return liveData;
-    }
 }
 ```
 
-* If you want to filter your data in database then use `query` method. `usersRepo.getQueryFromDatabase()` function will return `LiveData<T>` while `usersRepo.getQueryFromDatabaseCache()` return data from Firebase cache.
+* If you want to filter your data in database then use `query` method. `userRepo.getQueryFromFirestore()` function will return `LiveData<List<T>>` while `userRepo.getQueryFromFirestoreCache()` return `List<T>` from Firestore cache. Then update your adapter or UI.
 
 ```
-fun queryUsersFromDatabase(activity: AppCompatActivity) {
-        val query = FirebaseDatabase.getInstance().getReference("users").orderByKey().limitToLast(2)
-        usersRepo.getQueryFromDatabase(query).observe(activity, Observer { users ->
+fun queryUsersFromFirestore(activity: AppCompatActivity) {
+        val query = FirebaseFirestore.getInstance().collection("users").
+            orderBy(FIRESTORE_KEY.USER.firstName).
+            whereEqualTo(FIRESTORE_KEY.USER.lastName, "Sahu").
+            limitToLast(2)
+        userRepo.getQueryFromFirestore(query).observe(activity, Observer { users ->
             users?.forEach {
-                //update UI
+                // update your adapter in activity
             }
         })
- }
- 
- fun queryUsersFromCache() {
+}
+
+fun queryUsersFromCache() {
+        val query = FirebaseFirestore.getInstance().collection("users").
+            whereEqualTo(FIRESTORE_KEY.USER.firstName, "Sachi").
+            whereEqualTo(FIRESTORE_KEY.USER.lastName, "Sahu")
         viewModelScope.launch {
-            val query = FirebaseDatabase.getInstance().getReference("users").orderByKey().limitToLast(2)
-            val users = usersRepo.getQueryFromDatabaseCache(query)
+            val users = userRepo.getQueryFromFirestoreCache(query)
             users?.forEach {
-                //update UI
+                // update your adapter in activity
             }
         }
 }
@@ -608,44 +552,48 @@ fun queryUsersFromDatabase(activity: AppCompatActivity) {
 
 **Java User**
  
-If you want to filter your data in database then use `query` method. `usersRepo.getQueryFromDatabase()` function will return `LiveData<T>` while `usersRepo.getQueryFromDatabaseCache().get()` return data from Firebase cache.
+If you want to filter your data in database then use `query` method. `userRepo.getQueryFromFirestore()` function will return `LiveData<List<T>>` while `userRepo.getQueryFromFirestoreCache().get()` return `List<T>` from Firestore cache. Then update your adapter or UI.
 
 ```
- public void queryUsersFromDatabase(AppCompatActivity activity) {
-        Query query = FirebaseDatabase.getInstance().getReference("users")
-                .orderByKey().limitToLast(2);
-        usersRepo.getQueryFromDatabase(query).observe(activity, new Observer<List<User>>() {
+public void queryUsersFromDatabase(AppCompatActivity activity) {
+        Query query = FirebaseFirestore.getInstance().collection("users").
+                whereEqualTo(FIRESTORE_KEY.USER.firstName, "Sachi").
+                whereEqualTo(FIRESTORE_KEY.USER.lastName, "Sahu");
+        userRepo.getQueryFromFirestore(query).observe(activity, new Observer<List<User>>() {
             @Override
             public void onChanged(List<User> users) {
                 for (User user : users) {
-                    // update your adapter
+                    // update your adapter in activity
                 }
             }
         });
- }
- 
- public void queryUsersFromCache(AppCompatActivity activity) {
-        Query query = FirebaseDatabase.getInstance().getReference("users")
-                .orderByKey().limitToLast(2);
+}
+
+public void queryUsersFromCache(AppCompatActivity activity) {
+        Query query = FirebaseFirestore.getInstance().collection("users").
+                orderBy(FIRESTORE_KEY.USER.firstName).
+                startAt("Sach").
+                endAt("Sach" + "\uf8ff");
         queryUsersFromCache(query).observe(activity, new Observer<List<User>>() {
             @Override
             public void onChanged(List<User> users) {
                 for (User user : users) {
-                    // update your adapter
+                    // update your adapter in activity
+                    Log.v("getFromSCache", user.getFirstName());
                 }
             }
         });
- }
- 
- private static LiveData<List<User>> queryUsersFromCache(final Query query) {
-        final UsersRepo usersRepo = UsersRepo.getInstance();
+}
+
+private static LiveData<List<User>> queryUsersFromCache(final Query query) {
+        final UserRepo userRepo = UserRepo.getInstance();
         final MutableLiveData<List<User>> liveData = new MutableLiveData<>();
         new AsyncTask<Void, Void, LiveData<List<User>>>() {
 
             @Override
             protected LiveData<List<User>> doInBackground(Void... voids) {
                 try {
-                    List<User> result = usersRepo.getQueryFromDatabaseCache(query).get();
+                    List<User> result = userRepo.getQueryFromFirestoreCache(query).get();
                     liveData.postValue(result);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -657,19 +605,7 @@ If you want to filter your data in database then use `query` method. `usersRepo.
         }.execute();
 
         return liveData;
- }
- ```
- 
-* Initialize `ViewModel` class in your `activity` class and call above methods
-
-```
-val usersViewModel = ViewModelProvider(this).get(UsersViewModel::class.java)
+}
 ```
 
-**Java User**
-
-```
-final UsersViewModel usersViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
-```
-
-#### Thank you for using FirebaseDatabaseAssistant.
+#### Thank you for using FirebaseFirestoreAssistant.
