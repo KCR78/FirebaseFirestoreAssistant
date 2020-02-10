@@ -22,27 +22,29 @@ public class JavaActivity extends AppCompatActivity {
 
         final UserViewModel userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
 
-        //userViewModel.getUsersFromDatabase(this);
-        //userViewModel.getUsersFromCache(this);
-        //userViewModel.queryUsersFromDatabase(this);
-        //userViewModel.queryUsersFromCache(this);
+        userViewModel.getUsersFromDatabase(this);
+        userViewModel.getUsersFromCache(this);
+        userViewModel.queryUsersFromDatabase(this);
+        userViewModel.queryUsersFromCache(this);
 
         //userViewModel.getUserFromDatabase(this);
-        //userViewModel.getUserFromCache(this);
+        userViewModel.getUserFromCache(this);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //pushUser(userViewModel);
-                //updateChild(userViewModel);
                 //updateUser(userViewModel);
+                //updateUserFields(userViewModel);
+                //updateChild(userViewModel);
                 //deleteUserField(userViewModel);
             }
         });
     }
 
     private void deleteUserField(UserViewModel userViewModel) {
-        userViewModel.deleteFromFirestore(this, "users", "");
+        userViewModel.deleteFromFirestore(this, "users",
+                "vSXgBUPW5VvXe2gbqJes");
     }
 
     private void updateUserFields(UserViewModel userViewModel) {
@@ -50,12 +52,12 @@ public class JavaActivity extends AppCompatActivity {
         updates.put(FIRESTORE_KEY.USER.firstName, "asdf");
         updates.put(FIRESTORE_KEY.USER.email, 16);
         userViewModel.updateUserFieldsToFirestore(this, "users",
-                "", updates);
+                "JTwG2mtMytEUe6ONyGll", updates);
     }
 
     private void updateChild(UserViewModel userViewModel) {
         userViewModel.updateUserFieldToFirestore(this, "users",
-                "", FIRESTORE_KEY.USER.firstName,"Sachin");
+                "JTwG2mtMytEUe6ONyGll", FIRESTORE_KEY.USER.firstName,"Sach5");
     }
 
     private void updateUser(UserViewModel userViewModel) {
@@ -64,7 +66,7 @@ public class JavaActivity extends AppCompatActivity {
         user.setLastName("Sahu");
         user.setEmail("android@com6");
         userViewModel.updateUserToFirestore(this,"users",
-                "", user);
+                "JTwG2mtMytEUe6ONyGll", user);
     }
 
     private void pushUser(UserViewModel userViewModel) {

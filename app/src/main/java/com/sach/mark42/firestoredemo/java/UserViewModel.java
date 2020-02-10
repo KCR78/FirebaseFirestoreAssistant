@@ -1,6 +1,7 @@
 package com.sach.mark42.firestoredemo.java;
 
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,7 +27,8 @@ public class UserViewModel extends ViewModel {
         final TextView lName = activity.findViewById(R.id.lastName);
         final TextView email = activity.findViewById(R.id.email);
 
-        userRepo.getDocumentFromFirestore("users", "").observe(activity, new Observer<User>() {
+        userRepo.getDocumentFromFirestore("users", "qUiuSLFQXTqYbEf6mxBV")
+                .observe(activity, new Observer<User>() {
             @Override
             public void onChanged(User user) {
                 fName.setText(user.getFirstName());
@@ -37,7 +39,8 @@ public class UserViewModel extends ViewModel {
     }
 
     public void getUserFromCache(final AppCompatActivity activity) {
-        getUserFromCache("users", "").observe(activity, new Observer<User>() {
+        getUserFromCache("users", "qUiuSLFQXTqYbEf6mxBV")
+                .observe(activity, new Observer<User>() {
             @Override
             public void onChanged(User user) {
                 TextView fName = activity.findViewById(R.id.firstName);
@@ -133,7 +136,7 @@ public class UserViewModel extends ViewModel {
             @Override
             public void onChanged(List<User> users) {
                 for (User user : users) {
-                    // update your adapter
+                    // update your adapter in activity
                 }
             }
         });
@@ -141,13 +144,13 @@ public class UserViewModel extends ViewModel {
 
     public void queryUsersFromDatabase(AppCompatActivity activity) {
         Query query = FirebaseFirestore.getInstance().collection("users").
-                whereEqualTo("fName", "sachi").
-                whereEqualTo("email", "android@email");
+                whereEqualTo(FIRESTORE_KEY.USER.firstName, "Sachi").
+                whereEqualTo(FIRESTORE_KEY.USER.lastName, "Sahu");
         userRepo.getQueryFromFirestore(query).observe(activity, new Observer<List<User>>() {
             @Override
             public void onChanged(List<User> users) {
                 for (User user : users) {
-                    // update your adapter
+                    // update your adapter in activity
                 }
             }
         });
@@ -158,7 +161,7 @@ public class UserViewModel extends ViewModel {
             @Override
             public void onChanged(List<User> users) {
                 for (User user : users) {
-                    // update your adapter
+                    // update your adapter in activity
                 }
             }
         });
@@ -166,14 +169,15 @@ public class UserViewModel extends ViewModel {
 
     public void queryUsersFromCache(AppCompatActivity activity) {
         Query query = FirebaseFirestore.getInstance().collection("users").
-                orderBy("fname").
-                startAt("sach").
-                endAt("sach" + "\uf8ff");
+                orderBy(FIRESTORE_KEY.USER.firstName).
+                startAt("Sach").
+                endAt("Sach" + "\uf8ff");
         queryUsersFromCache(query).observe(activity, new Observer<List<User>>() {
             @Override
             public void onChanged(List<User> users) {
                 for (User user : users) {
-                    // update your adapter
+                    // update your adapter in activity
+                    Log.v("getFromSCache", user.getFirstName());
                 }
             }
         });
